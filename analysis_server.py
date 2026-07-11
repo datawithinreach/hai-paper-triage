@@ -385,8 +385,8 @@ class MapRequest(BaseModel):
 app = FastAPI(title="CHI/UIST Paper Triage Analysis")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:8000", "http://localhost:8000"],
-    allow_methods=["GET", "POST"],
+    allow_origins=["*"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 

@@ -204,7 +204,8 @@ export const EmbeddingMap: React.FC<EmbeddingMapProps> = ({
     setLastComputedKeysKey(currentKeysKey);
 
     try {
-      const response = await fetch("/api/map", {
+      const apiBase = import.meta.env.VITE_API_URL || "";
+      const response = await fetch(`${apiBase}/api/map`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids }),
