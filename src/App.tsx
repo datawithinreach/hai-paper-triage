@@ -46,6 +46,7 @@ export default function App() {
     tag: "",
     type: "All",
     showOnlyEdited: false,
+    showOnlyBookmarked: false,
     sort: "relevance",
   });
 
@@ -69,21 +70,31 @@ export default function App() {
           const rawEditedVal = row.relevance_edited ? String(row.relevance_edited).trim() : "";
           const relevanceVal = rawEditedVal ? normalizeRelevance(rawEditedVal) : normalized[index].__aiRelevance;
           const isChanged = relevanceVal !== normalized[index].__aiRelevance;
+          const isCsvBookmarked = row.bookmarked ? String(row.bookmarked).trim().toLowerCase() === "yes" : false;
 
           const existingEdit = initialEdits[key];
           if (existingEdit) {
             // Merge CSV tags with existing tags
             const mergedTags = Array.from(new Set([...existingEdit.tags, ...csvTags]));
+            let changed = false;
             if (mergedTags.length !== existingEdit.tags.length) {
               existingEdit.tags = mergedTags;
+              changed = true;
+            }
+            if (isCsvBookmarked && !existingEdit.bookmarked) {
+              existingEdit.bookmarked = true;
+              changed = true;
+            }
+            if (changed) {
               existingEdit.updated_at = new Date().toISOString();
               seededAny = true;
             }
-          } else if (isChanged || csvTags.length > 0) {
+          } else if (isChanged || csvTags.length > 0 || isCsvBookmarked) {
             // Seed new edit entry
             initialEdits[key] = {
               relevance: relevanceVal,
               tags: csvTags,
+              bookmarked: isCsvBookmarked,
               updated_at: row.edited_at ? String(row.edited_at).trim() : new Date().toISOString(),
             };
             seededAny = true;
@@ -139,6 +150,7 @@ export default function App() {
       const current = prev[key] || {
         relevance: paper?.__aiRelevance || "Unsure",
         tags: [],
+        bookmarked: false,
         updated_at: new Date().toISOString(),
       };
       
@@ -150,9 +162,10 @@ export default function App() {
       
       const changedRelevance = next.relevance !== paper?.__aiRelevance;
       const hasTags = next.tags.length > 0;
+      const isBookmarked = !!next.bookmarked;
       
       const nextEdits = { ...prev };
-      if (!changedRelevance && !hasTags) {
+      if (!changedRelevance && !hasTags && !isBookmarked) {
         delete nextEdits[key];
       } else {
         nextEdits[key] = next;
@@ -174,7 +187,7 @@ export default function App() {
 
   // Apply filters and sorting
   const filteredPapers = useMemo(() => {
-    const { search, searchInTitle, searchInAbstract, conference, years, relevance, tag, type, showOnlyEdited, sort } = filters;
+    const { search, searchInTitle, searchInAbstract, conference, years, relevance, tag, type, showOnlyEdited, showOnlyBookmarked, sort } = filters;
     
     let result = papers.filter((paper) => {
       const currentRelevance = getEffectiveRelevance(paper);
@@ -187,6 +200,7 @@ export default function App() {
       const matchTag = !tag || paperTags.includes(tag);
       const matchType = type === "All" || paper.type === type;
       const matchEdited = !showOnlyEdited || !!edits[paper.__key];
+      const matchBookmarked = !showOnlyBookmarked || !!edits[paper.__key]?.bookmarked;
       
       let matchSearch = true;
       if (searchLower) {
@@ -203,7 +217,7 @@ export default function App() {
         matchSearch = matchTitle || matchAbstract || matchTags;
       }
       
-      return matchConf && matchYear && matchRelevance && matchTag && matchType && matchEdited && matchSearch;
+      return matchConf && matchYear && matchRelevance && matchTag && matchType && matchEdited && matchBookmarked && matchSearch;
     });
 
     // Sorting
@@ -232,7 +246,7 @@ export default function App() {
   }, [papers, edits, filters]);
 
   const mapFilteredPapers = useMemo(() => {
-    const { conference, years, relevance, tag } = filters;
+    const { conference, years, relevance, tag, showOnlyBookmarked } = filters;
     
     const result = papers.filter((paper) => {
       const currentRelevance = getEffectiveRelevance(paper);
@@ -242,14 +256,15 @@ export default function App() {
       const matchYear = years.has(paper.year);
       const matchRelevance = relevance.has(currentRelevance);
       const matchTag = !tag || paperTags.includes(tag);
+      const matchBookmarked = !showOnlyBookmarked || !!edits[paper.__key]?.bookmarked;
       
-      return matchConf && matchYear && matchRelevance && matchTag;
+      return matchConf && matchYear && matchRelevance && matchTag && matchBookmarked;
     });
 
     // Stably sort to keep consistent ID ordering for the API request
     result.sort((a, b) => a.__key.localeCompare(b.__key));
     return result;
-  }, [papers, edits, filters.conference, filters.years, filters.relevance, filters.tag]);
+  }, [papers, edits, filters.conference, filters.years, filters.relevance, filters.tag, filters.showOnlyBookmarked]);
 
   // Handle infinite scroll
   useEffect(() => {
@@ -280,6 +295,7 @@ export default function App() {
       tag: "",
       type: "All",
       showOnlyEdited: false,
+      showOnlyBookmarked: false,
       sort: "relevance",
     });
   };
@@ -304,6 +320,7 @@ export default function App() {
       "rationale",
       "relevance_edited",
       "tags",
+      "bookmarked",
       "edited_at",
     ];
 
@@ -327,6 +344,7 @@ export default function App() {
           p.rationale,
           edit ? edit.relevance : p.__aiRelevance,
           edit && edit.tags ? edit.tags.join(";") : "",
+          edit && edit.bookmarked ? "Yes" : "No",
           edit ? edit.updated_at : "",
         ];
         

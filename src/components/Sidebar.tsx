@@ -248,7 +248,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               );
             })}
           </div>
-          <div className="mt-2 pt-2 border-t border-slate-100">
+          <div className="mt-2 pt-2 border-t border-slate-100 flex flex-col gap-1.5">
             <label className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-700 cursor-pointer select-none">
               <input
                 type="checkbox"
@@ -257,6 +257,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 className="w-3.5 h-3.5 rounded text-accent focus:ring-accent border-line accent-accent cursor-pointer"
               />
               Show only edited papers
+            </label>
+            <label className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-700 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={filters.showOnlyBookmarked}
+                onChange={(e) => setFilters((prev) => ({ ...prev, showOnlyBookmarked: e.target.checked }))}
+                className="w-3.5 h-3.5 rounded text-accent focus:ring-accent border-line accent-accent cursor-pointer"
+              />
+              Show only bookmarked papers
             </label>
           </div>
         </div>

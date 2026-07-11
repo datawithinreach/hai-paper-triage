@@ -22,6 +22,7 @@ export interface Paper {
 export interface Edit {
   relevance: "Yes" | "No" | "Unsure";
   tags: string[];
+  bookmarked?: boolean;
   updated_at: string;
 }
 
@@ -54,5 +55,6 @@ export interface Filters {
   tag: string;
   type: string;
   showOnlyEdited: boolean;
+  showOnlyBookmarked: boolean;
   sort: string;
 }

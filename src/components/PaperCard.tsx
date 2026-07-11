@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Paper, Edit } from "../types";
-import { Plus, Minus, ExternalLink, X } from "lucide-react";
+import { Plus, Minus, ExternalLink, X, Bookmark } from "lucide-react";
 
 interface PaperCardProps {
   paper: Paper;
@@ -84,36 +84,52 @@ export const PaperCard: React.FC<PaperCardProps> = ({
   return (
     <article className="border border-line rounded-xl bg-white shadow-premium overflow-hidden transition-all duration-200">
       {/* Header Summary */}
-      <button
-        type="button"
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between p-4 sm:p-5 text-left gap-4 hover:bg-slate-50/50 transition-all focus:outline-none"
-        aria-expanded={isExpanded}
-      >
-        <div className="flex items-start gap-4 flex-1">
-          <span className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg border border-line text-accent-strong bg-white font-black text-sm">
-            {isExpanded ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-          </span>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-base sm:text-lg font-extrabold text-ink leading-snug">
-              {searchInTitle ? highlightText(paper.title, searchQuery) : paper.title}
-            </h3>
-            <span className="inline-block mt-1.5 text-xs font-semibold text-muted">
-              {[
-                paper.conference,
-                paper.year,
-                paper.type,
-                paper.award ? `Award: ${paper.award}` : "",
-              ]
-                .filter(Boolean)
-                .join(" | ")}
+      <div className="flex items-center justify-between hover:bg-slate-50/20 transition-all">
+        <button
+          type="button"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="flex-1 flex items-center justify-between p-4 sm:p-5 text-left gap-4 focus:outline-none min-w-0"
+          aria-expanded={isExpanded}
+        >
+          <div className="flex items-start gap-4 flex-1">
+            <span className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg border border-line text-accent-strong bg-white font-black text-sm">
+              {isExpanded ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
             </span>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-base sm:text-lg font-extrabold text-ink leading-snug">
+                {searchInTitle ? highlightText(paper.title, searchQuery) : paper.title}
+              </h3>
+              <span className="inline-block mt-1.5 text-xs font-semibold text-muted">
+                {[
+                  paper.conference,
+                  paper.year,
+                  paper.type,
+                  paper.award ? `Award: ${paper.award}` : "",
+                ]
+                  .filter(Boolean)
+                  .join(" | ")}
+              </span>
+            </div>
           </div>
-        </div>
-        <span className={`flex-shrink-0 text-xs font-extrabold px-3 py-1.5 rounded-full ${getRelevancePillClass(relevance)}`}>
-          {relevance}
-        </span>
-      </button>
+          <span className={`flex-shrink-0 text-xs font-extrabold px-3 py-1.5 rounded-full ${getRelevancePillClass(relevance)}`}>
+            {relevance}
+          </span>
+        </button>
+
+        {/* Bookmark Button */}
+        <button
+          type="button"
+          onClick={() => onUpdateEdit(paper.__key, { bookmarked: !edit?.bookmarked })}
+          className={`flex-shrink-0 mr-4 sm:mr-5 p-2 rounded-lg border transition-all cursor-pointer ${
+            edit?.bookmarked
+              ? "bg-amber-50 text-amber-500 border-amber-200"
+              : "bg-white text-slate-400 border-line hover:text-slate-600 hover:bg-slate-50"
+          }`}
+          title={edit?.bookmarked ? "Remove bookmark" : "Bookmark paper"}
+        >
+          <Bookmark className={`w-4.5 h-4.5 ${edit?.bookmarked ? "fill-amber-500 text-amber-500" : ""}`} />
+        </button>
+      </div>
 
       {/* Expanded Details */}
       {isExpanded && (
