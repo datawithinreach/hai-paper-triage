@@ -246,22 +246,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
 
-        {/* Relevance */}
         <div className="flex flex-col gap-2">
           <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Relevance</span>
-          <div className="space-y-1.5">
+          <div className="flex gap-1.5">
             {(["Yes", "No", "Unsure"] as const).map((option) => {
               const isActive = filters.relevance.has(option);
               return (
-                <label key={option} className="flex items-center gap-2.5 text-sm font-medium text-slate-700 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={isActive}
-                    onChange={() => handleRelevanceToggle(option)}
-                    className="w-4 h-4 rounded text-accent focus:ring-accent border-line accent-accent cursor-pointer"
-                  />
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => handleRelevanceToggle(option)}
+                  className={`flex-1 px-3 py-1.5 text-xs font-bold rounded-lg border transition-all cursor-pointer text-center ${
+                    isActive
+                      ? "bg-accent-strong text-white border-accent-strong shadow-sm"
+                      : "bg-white text-slate-600 border-line hover:bg-slate-50"
+                  }`}
+                >
                   {option}
-                </label>
+                </button>
               );
             })}
           </div>
