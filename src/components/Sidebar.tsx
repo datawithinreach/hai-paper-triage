@@ -110,9 +110,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <aside className="w-full lg:w-80 lg:h-screen lg:sticky lg:top-0 bg-white border-b lg:border-b-0 lg:border-r border-line p-6 overflow-y-auto flex flex-col justify-between">
       <div className="space-y-6">
         {/* Brand */}
-        <div className="pb-4 border-b border-line">
-          <h1 className="text-2xl font-extrabold text-ink leading-tight">Paper Triage</h1>
-          <p className="text-xs text-muted mt-1.5 font-medium">CHI/UIST human-AI interaction review</p>
+        <div className="pb-4 border-b border-line flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-extrabold text-ink leading-tight">Paper Triage</h1>
+            <p className="text-xs text-muted mt-1.5 font-medium">CHI/UIST human-AI interaction review</p>
+          </div>
+          <button
+            type="button"
+            onClick={onReset}
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-accent hover:text-accent-strong transition-all cursor-pointer bg-slate-50 hover:bg-slate-100 border border-line rounded-lg px-2.5 py-1.5 shadow-sm"
+            title="Reset Filters"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            Reset
+          </button>
         </div>
 
         {/* Search */}
@@ -373,14 +384,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             <Download className="w-4 h-4" />
             Export CSV
-          </button>
-          <button
-            type="button"
-            onClick={onReset}
-            className="inline-flex items-center justify-center bg-white border border-line text-slate-600 hover:text-ink font-bold text-sm py-2.5 px-3.5 rounded-lg hover:bg-slate-50 transition-all"
-            title="Reset filters"
-          >
-            <RotateCcw className="w-4.5 h-4.5" />
           </button>
         </div>
 
