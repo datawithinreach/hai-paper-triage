@@ -9,6 +9,7 @@ interface PaperCardProps {
   searchQuery?: string;
   searchInTitle?: boolean;
   searchInAbstract?: boolean;
+  allTags?: string[];
 }
 
 const highlightText = (text: string, search: string) => {
@@ -38,6 +39,7 @@ export const PaperCard: React.FC<PaperCardProps> = ({
   searchQuery = "",
   searchInTitle = true,
   searchInAbstract = true,
+  allTags = [],
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [tagInput, setTagInput] = useState("");
@@ -181,12 +183,18 @@ export const PaperCard: React.FC<PaperCardProps> = ({
               <div className="flex gap-2">
                 <input
                   type="text"
+                  list={`tags-list-${paper.__key}`}
                   placeholder="Add tag, then press Enter"
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={handleKeyDown}
                   className="flex-1 text-sm bg-slate-50 border border-line rounded-lg py-1.5 px-3 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
                 />
+                <datalist id={`tags-list-${paper.__key}`}>
+                  {allTags.map((tag) => (
+                    <option key={tag} value={tag} />
+                  ))}
+                </datalist>
                 <button
                   type="button"
                   onClick={handleAddTag}

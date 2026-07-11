@@ -577,6 +577,7 @@ export default function App() {
                       searchQuery={filters.search}
                       searchInTitle={filters.searchInTitle}
                       searchInAbstract={filters.searchInAbstract}
+                      allTags={allTags}
                     />
                   ))
               ) : (
