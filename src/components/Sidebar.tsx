@@ -15,7 +15,6 @@ interface SidebarProps {
   onExport: () => void;
   onImport: (csvText: string) => void;
   onReset: () => void;
-  activeView?: string;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -31,7 +30,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onExport,
   onImport,
   onReset,
-  activeView = "list",
 }) => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -106,9 +104,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
 
 
-  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setFilters((prev) => ({ ...prev, sort: e.target.value }));
-  };
+
 
   return (
     <aside className="w-full lg:w-80 lg:h-screen lg:sticky lg:top-0 bg-white border-b lg:border-b-0 lg:border-r border-line p-6 overflow-y-auto flex flex-col justify-between">
@@ -344,26 +340,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
 
-        {/* Sort */}
-        {activeView !== "map" && (
-          <div className="flex flex-col gap-2">
-            <label htmlFor="sort" className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-              Sort
-            </label>
-            <select
-              id="sort"
-              className="w-full bg-white border border-line rounded-lg py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-              value={filters.sort}
-              onChange={handleSortChange}
-            >
-              <option value="year-desc">Newest first</option>
-              <option value="year-asc">Oldest first</option>
-              <option value="title-asc">Title A-Z</option>
-              <option value="relevance">Relevant first</option>
-              <option value="irrelevant">Irrelevant first</option>
-            </select>
-          </div>
-        )}
+
       </div>
 
       {/* Footer / Actions */}

@@ -387,7 +387,6 @@ export default function App() {
           onExport={handleExportCsv}
           onImport={handleImportCsv}
           onReset={handleResetFilters}
-          activeView={activeView}
         />
       )}
 
@@ -474,6 +473,30 @@ export default function App() {
         {/* View Panel */}
         <div className="mt-4">
           <div className={activeView === "list" ? "block" : "hidden"}>
+            {/* Header / Sort Controls */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+              <span className="text-xs font-bold text-slate-500">
+                Showing {filteredPapers.length.toLocaleString()} papers
+              </span>
+              <div className="flex items-center gap-2">
+                <label htmlFor="list-sort" className="text-xs font-bold text-slate-600 uppercase tracking-wider whitespace-nowrap">
+                  Sort:
+                </label>
+                <select
+                  id="list-sort"
+                  value={filters.sort}
+                  onChange={(e) => setFilters((prev) => ({ ...prev, sort: e.target.value }))}
+                  className="bg-white border border-line rounded-lg py-1.5 px-3 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent cursor-pointer"
+                >
+                  <option value="relevance">Relevant first</option>
+                  <option value="year-desc">Newest first</option>
+                  <option value="year-asc">Oldest first</option>
+                  <option value="title-asc">Title A-Z</option>
+                  <option value="irrelevant">Irrelevant first</option>
+                </select>
+              </div>
+            </div>
+
             <div className="space-y-3">
               {filteredPapers.length > 0 ? (
                 filteredPapers
