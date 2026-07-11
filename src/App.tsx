@@ -334,6 +334,34 @@ export default function App() {
     document.body.removeChild(link);
   };
 
+  const handleImportCsv = (csvText: string) => {
+    try {
+      const rawRows = parseCsv(csvText);
+      if (!rawRows || rawRows.length === 0) {
+        alert("Empty or invalid CSV file.");
+        return;
+      }
+      
+      const normalized = rawRows.map((row, index) => normalizeRow(row, index));
+      
+      // Load imported papers
+      setPapers(normalized);
+      
+      // Reset local edits since the imported CSV is our new baseline
+      setEdits({});
+      saveEdits({});
+      
+      // Update filters with years present in the new dataset
+      const years = Array.from(new Set(normalized.map((row) => row.year).filter(Boolean))).sort();
+      setFilters((prev) => ({ ...prev, years: new Set(years) }));
+      
+      alert(`Successfully imported ${normalized.length.toLocaleString()} papers! Any CSV edits have been loaded as the starting baseline.`);
+    } catch (err) {
+      alert("Failed to parse the imported CSV file. Make sure it has a valid format.");
+      console.error(err);
+    }
+  };
+
   // Metrics
   const relevantCount = useMemo(() => {
     return filteredPapers.filter((p) => getEffectiveRelevance(p) === "Yes").length;
@@ -357,6 +385,7 @@ export default function App() {
           allTags={allTags}
           savedEditsCount={editedCount}
           onExport={handleExportCsv}
+          onImport={handleImportCsv}
           onReset={handleResetFilters}
           activeView={activeView}
         />

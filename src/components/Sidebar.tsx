@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import type { Filters, Paper, Edit } from "../types";
-import { Search, RotateCcw, Download } from "lucide-react";
+import { Search, RotateCcw, Download, Upload } from "lucide-react";
 
 interface SidebarProps {
   filters: Filters;
@@ -13,6 +13,7 @@ interface SidebarProps {
   allTags: string[];
   savedEditsCount: number;
   onExport: () => void;
+  onImport: (csvText: string) => void;
   onReset: () => void;
   activeView?: string;
 }
@@ -28,9 +29,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
   allTags,
   savedEditsCount,
   onExport,
+  onImport,
   onReset,
   activeView = "list",
 }) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result;
+      if (typeof text === "string") {
+        onImport(text);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  };
+
   const yearStats = useMemo(() => {
     const stats: Record<string, { relevant: number; irrelevant: number; total: number }> = {};
     papers.forEach((p) => {
@@ -350,10 +367,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Footer / Actions */}
       <div className="mt-8 pt-6 border-t border-line space-y-4">
         <div className="flex gap-2">
+          <label className="flex-1 inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border border-line font-bold text-sm py-2.5 px-4 rounded-lg shadow-sm hover:shadow transition-all cursor-pointer select-none">
+            <Upload className="w-4 h-4 text-slate-500" />
+            Import CSV
+            <input
+              type="file"
+              accept=".csv"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </label>
           <button
             type="button"
             onClick={onExport}
-            className="flex-1 inline-flex items-center justify-center gap-2 bg-accent hover:bg-accent-strong text-white font-bold text-sm py-2.5 px-4 rounded-lg shadow-sm hover:shadow transition-all"
+            className="flex-1 inline-flex items-center justify-center gap-2 bg-accent hover:bg-accent-strong text-white font-bold text-sm py-2.5 px-4 rounded-lg shadow-sm hover:shadow transition-all cursor-pointer"
           >
             <Download className="w-4 h-4" />
             Export CSV
