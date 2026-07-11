@@ -54,7 +54,7 @@ export interface Filters {
   conference: string;
   years: Set<string>;
   relevance: Set<"Yes" | "No" | "Unsure">;
-  tag: string;
+  tags: Set<string>;
   type: string;
   showOnlyEdited: boolean;
   showOnlyBookmarked: boolean;

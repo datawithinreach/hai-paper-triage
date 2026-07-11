@@ -43,7 +43,7 @@ export default function App() {
     conference: "All",
     years: new Set<string>(),
     relevance: new Set<"Yes" | "No" | "Unsure">(["Yes"]),
-    tag: "",
+    tags: new Set<string>(),
     type: "All",
     showOnlyEdited: false,
     showOnlyBookmarked: false,
@@ -94,10 +94,19 @@ export default function App() {
 
   // Update tag selections when edits change
   useEffect(() => {
-    if (filters.tag && !allTags.includes(filters.tag)) {
-      setFilters((prev) => ({ ...prev, tag: "" }));
+    const nextTags = new Set<string>();
+    let changed = false;
+    filters.tags.forEach((t) => {
+      if (allTags.includes(t)) {
+        nextTags.add(t);
+      } else {
+        changed = true;
+      }
+    });
+    if (changed) {
+      setFilters((prev) => ({ ...prev, tags: nextTags }));
     }
-  }, [allTags, filters.tag]);
+  }, [allTags, filters.tags]);
 
   // Handle saving of edits
   const handleUpdateEdit = (key: string, patch: Partial<Edit>) => {
@@ -147,7 +156,7 @@ export default function App() {
 
   // Apply filters and sorting
   const filteredPapers = useMemo(() => {
-    const { search, searchInTitle, searchInAbstract, conference, years, relevance, tag, type, showOnlyEdited, showOnlyBookmarked, sort } = filters;
+    const { search, searchInTitle, searchInAbstract, conference, years, relevance, tags, type, showOnlyEdited, showOnlyBookmarked, sort } = filters;
     
     let result = papers.filter((paper) => {
       const currentRelevance = getEffectiveRelevance(paper);
@@ -157,7 +166,7 @@ export default function App() {
       const matchConf = conference === "All" || paper.conference === conference;
       const matchYear = years.has(paper.year);
       const matchRelevance = relevance.has(currentRelevance);
-      const matchTag = !tag || paperTags.includes(tag);
+      const matchTag = tags.size === 0 || Array.from(tags).every((t) => paperTags.includes(t));
       const matchType = type === "All" || paper.type === type;
       const matchEdited = !showOnlyEdited || !!edits[paper.__key];
       const matchBookmarked = !showOnlyBookmarked || getEffectiveBookmarked(paper);
@@ -206,7 +215,7 @@ export default function App() {
   }, [papers, edits, filters]);
 
   const mapFilteredPapers = useMemo(() => {
-    const { conference, years, relevance, tag, showOnlyBookmarked } = filters;
+    const { conference, years, relevance, tags, showOnlyBookmarked } = filters;
     
     const result = papers.filter((paper) => {
       const currentRelevance = getEffectiveRelevance(paper);
@@ -215,7 +224,7 @@ export default function App() {
       const matchConf = conference === "All" || paper.conference === conference;
       const matchYear = years.has(paper.year);
       const matchRelevance = relevance.has(currentRelevance);
-      const matchTag = !tag || paperTags.includes(tag);
+      const matchTag = tags.size === 0 || Array.from(tags).every((t) => paperTags.includes(t));
       const matchBookmarked = !showOnlyBookmarked || getEffectiveBookmarked(paper);
       
       return matchConf && matchYear && matchRelevance && matchTag && matchBookmarked;
@@ -224,7 +233,7 @@ export default function App() {
     // Stably sort to keep consistent ID ordering for the API request
     result.sort((a, b) => a.__key.localeCompare(b.__key));
     return result;
-  }, [papers, edits, filters.conference, filters.years, filters.relevance, filters.tag, filters.showOnlyBookmarked]);
+  }, [papers, edits, filters.conference, filters.years, filters.relevance, filters.tags, filters.showOnlyBookmarked]);
 
   // Handle infinite scroll
   useEffect(() => {
@@ -252,7 +261,7 @@ export default function App() {
       conference: "All",
       years: new Set(uniqueYears),
       relevance: new Set(["Yes"]),
-      tag: "",
+      tags: new Set<string>(),
       type: "All",
       showOnlyEdited: false,
       showOnlyBookmarked: false,

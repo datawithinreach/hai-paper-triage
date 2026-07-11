@@ -311,9 +311,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="flex flex-wrap gap-1.5">
             <button
               type="button"
-              onClick={() => setFilters((prev) => ({ ...prev, tag: "" }))}
+              onClick={() => setFilters((prev) => ({ ...prev, tags: new Set() }))}
               className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
-                filters.tag === ""
+                filters.tags.size === 0
                   ? "bg-accent-strong text-white border-accent-strong shadow-sm"
                   : "bg-white text-slate-600 border-line hover:bg-slate-50"
               }`}
@@ -321,12 +321,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
               All
             </button>
             {allTags.map((tag) => {
-              const isActive = filters.tag === tag;
+              const isActive = filters.tags.has(tag);
               return (
                 <button
                   key={tag}
                   type="button"
-                  onClick={() => setFilters((prev) => ({ ...prev, tag: isActive ? "" : tag }))}
+                  onClick={() => {
+                    setFilters((prev) => {
+                      const next = new Set(prev.tags);
+                      if (next.has(tag)) {
+                        next.delete(tag);
+                      } else {
+                        next.add(tag);
+                      }
+                      return { ...prev, tags: next };
+                    });
+                  }}
                   className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
                     isActive
                       ? "bg-accent-strong text-white border-accent-strong shadow-sm"
