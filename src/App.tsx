@@ -8,6 +8,7 @@ import { EmbeddingMap } from "./components/EmbeddingMap";
 
 const DATA_FILE = import.meta.env.BASE_URL + "chi_uist_after_chatgpt.csv";
 const STORAGE_KEY = "hai-paper-triage-edits-v1";
+const BASELINE_EDITS_KEY = "hai-paper-triage-baseline-edits-v1";
 const PAGE_SIZE = 80;
 
 function loadEdits(): Record<string, Edit> {
@@ -58,8 +59,21 @@ export default function App() {
         if (!response.ok) throw new Error(`Could not load ${DATA_FILE}`);
         const csv = await response.text();
         const rawRows = parseCsv(csv);
-        const normalized = rawRows.map((row, index) => normalizeRow(row, index));
         
+        // Load baseline edits overrides from localStorage
+        const storedBaseline = localStorage.getItem(BASELINE_EDITS_KEY);
+        const baselineEdits: Record<string, Edit> = storedBaseline ? JSON.parse(storedBaseline) : {};
+
+        const normalized = rawRows.map((row, index) => {
+          const paper = normalizeRow(row, index);
+          const override = baselineEdits[paper.__key];
+          if (override) {
+            paper.__aiRelevance = override.relevance;
+            paper.__tags = override.tags;
+            paper.__bookmarked = !!override.bookmarked;
+          }
+          return paper;
+        });
         
         // Populate years from data initially
         const years = Array.from(new Set(normalized.map((row) => row.year).filter(Boolean))).sort();
@@ -310,6 +324,9 @@ export default function App() {
         
         const isBookmarked = edit && edit.bookmarked !== undefined ? edit.bookmarked : p.__bookmarked;
 
+        const activeRelevance = edit ? edit.relevance : p.__aiRelevance;
+        const relevanceEditedStr = activeRelevance !== p.relevance ? activeRelevance : "";
+
         const rowData = [
           p.conference,
           p.year,
@@ -326,7 +343,7 @@ export default function App() {
           p.imported_id || "",
           p.__aiRelevance,
           p.rationale,
-          edit ? edit.relevance : "",
+          relevanceEditedStr,
           tagsStr,
           isBookmarked ? "Yes" : "No",
           edit ? edit.updated_at : "",
@@ -395,13 +412,16 @@ export default function App() {
         }
       });
       
-      // Save imported edits to localStorage so they persist across page refreshes
-      setEdits(importedEdits);
-      saveEdits(importedEdits);
+      // Save these as the persistent baseline overrides
+      localStorage.setItem(BASELINE_EDITS_KEY, JSON.stringify(importedEdits));
       
-      alert(`Successfully imported progress! Loaded ${Object.keys(importedEdits).length} edited papers, bookmarks, and tags. They have been saved locally and will persist.`);
+      // Reset active session edits completely back to zero
+      setEdits({});
+      saveEdits({});
       
-      // Force page reload to cleanly re-initialize the baseline CSV with the imported localStorage edits
+      alert(`Successfully imported progress! Loaded ${Object.keys(importedEdits).length} overrides into baseline. Your active edits counter has been reset to 0.`);
+      
+      // Force page reload to cleanly re-initialize the baseline CSV with the imported baseline edits
       window.location.reload();
     } catch (err) {
       alert("Failed to parse the imported CSV file. Make sure it has a valid format.");
