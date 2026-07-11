@@ -6,7 +6,7 @@ import { Sidebar } from "./components/Sidebar";
 import { PaperCard } from "./components/PaperCard";
 import { EmbeddingMap } from "./components/EmbeddingMap";
 
-const DATA_FILE = "/chi_uist_after_chatgpt.csv";
+const DATA_FILE = import.meta.env.BASE_URL + "chi_uist_after_chatgpt.csv";
 const STORAGE_KEY = "hai-paper-triage-edits-v1";
 const PAGE_SIZE = 80;
 
