@@ -90,6 +90,8 @@ export function normalizeRow(row: Record<string, string>, index: number): Paper 
     relevance: cleanedRow.relevance || "",
     rationale: cleanedRow.rationale || "",
     award: cleanedRow.award || undefined,
+    content_id: cleanedRow.content_id || "",
+    imported_id: cleanedRow.imported_id || "",
 
     __key: key,
     __index: index,

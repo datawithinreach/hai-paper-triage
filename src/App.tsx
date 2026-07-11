@@ -285,6 +285,8 @@ export default function App() {
       "award",
       "sessions",
       "abstract",
+      "content_id",
+      "imported_id",
       "relevance_original",
       "rationale",
       "relevance_edited",
@@ -297,6 +299,13 @@ export default function App() {
       columns.join(","),
       ...papers.map((p) => {
         const edit = edits[p.__key];
+        
+        // Use user-edited tags/bookmarks if they exist, otherwise fallback to baseline values
+        const activeTags = edit && edit.tags ? edit.tags : p.__tags;
+        const tagsStr = activeTags ? activeTags.join(";") : "";
+        
+        const isBookmarked = edit && edit.bookmarked !== undefined ? edit.bookmarked : p.__bookmarked;
+
         const rowData = [
           p.conference,
           p.year,
@@ -309,11 +318,13 @@ export default function App() {
           p.award || "",
           p.sessions,
           p.abstract,
+          p.content_id || "",
+          p.imported_id || "",
           p.__aiRelevance,
           p.rationale,
           edit ? edit.relevance : p.__aiRelevance,
-          edit && edit.tags ? edit.tags.join(";") : "",
-          edit && edit.bookmarked ? "Yes" : "No",
+          tagsStr,
+          isBookmarked ? "Yes" : "No",
           edit ? edit.updated_at : "",
         ];
         

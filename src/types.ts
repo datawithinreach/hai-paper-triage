@@ -12,6 +12,8 @@ export interface Paper {
   relevance: string;
   rationale: string;
   award?: string;
+  content_id?: string;
+  imported_id?: string;
 
   __key: string;
   __index: number;
