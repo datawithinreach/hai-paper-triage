@@ -326,7 +326,7 @@ export default function App() {
           p.imported_id || "",
           p.__aiRelevance,
           p.rationale,
-          edit ? edit.relevance : p.__aiRelevance,
+          edit ? edit.relevance : "",
           tagsStr,
           isBookmarked ? "Yes" : "No",
           edit ? edit.updated_at : "",
@@ -368,14 +368,24 @@ export default function App() {
       
       const normalized = rawRows.map((row, index) => normalizeRow(row, index));
       
-      // Reconstruct user edits from the imported CSV rows to save them persistently
+      // Reconstruct user edits from the imported CSV rows by comparing with the server baseline
       const importedEdits: Record<string, Edit> = {};
       normalized.forEach((p) => {
-        const hasRelevanceEdit = p.__aiRelevance !== p.relevance;
-        const hasTagsEdit = p.__tags.length > 0;
+        const originalPaper = papers.find((orig) => orig.__key === p.__key);
+        if (!originalPaper) return;
+
+        // An edit exists if relevance_edited is filled and differs from original relevance
+        const hasRelevanceEdit = p.__aiRelevance !== originalPaper.__aiRelevance;
+
+        // Compare tags arrays
+        const origTags = originalPaper.__tags || [];
+        const impTags = p.__tags || [];
+        const tagsChanged = origTags.length !== impTags.length || !origTags.every((t) => impTags.includes(t));
+
+        // Compare bookmarks (original baseline has no bookmarks)
         const hasBookmarkEdit = p.__bookmarked === true;
         
-        if (hasRelevanceEdit || hasTagsEdit || hasBookmarkEdit) {
+        if (hasRelevanceEdit || tagsChanged || hasBookmarkEdit) {
           importedEdits[p.__key] = {
             relevance: p.__aiRelevance,
             tags: p.__tags,
