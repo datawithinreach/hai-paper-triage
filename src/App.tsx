@@ -88,9 +88,13 @@ export default function App() {
   }, [papers]);
 
   const allTags = useMemo(() => {
-    const tags = Array.from(new Set(Object.values(edits).flatMap((e) => e.tags || [])));
-    return tags.sort((a, b) => a.localeCompare(b));
-  }, [edits]);
+    const tags = new Set<string>();
+    papers.forEach((p) => {
+      const paperTags = edits[p.__key]?.tags || p.__tags || [];
+      paperTags.forEach((t) => tags.add(t));
+    });
+    return Array.from(tags).sort((a, b) => a.localeCompare(b));
+  }, [papers, edits]);
 
   // Update tag selections when edits change
   useEffect(() => {
@@ -364,18 +368,31 @@ export default function App() {
       
       const normalized = rawRows.map((row, index) => normalizeRow(row, index));
       
-      // Load imported papers
-      setPapers(normalized);
+      // Reconstruct user edits from the imported CSV rows to save them persistently
+      const importedEdits: Record<string, Edit> = {};
+      normalized.forEach((p) => {
+        const hasRelevanceEdit = p.__aiRelevance !== p.relevance;
+        const hasTagsEdit = p.__tags.length > 0;
+        const hasBookmarkEdit = p.__bookmarked === true;
+        
+        if (hasRelevanceEdit || hasTagsEdit || hasBookmarkEdit) {
+          importedEdits[p.__key] = {
+            relevance: p.__aiRelevance,
+            tags: p.__tags,
+            bookmarked: p.__bookmarked,
+            updated_at: new Date().toISOString(),
+          };
+        }
+      });
       
-      // Reset local edits since the imported CSV is our new baseline
-      setEdits({});
-      saveEdits({});
+      // Save imported edits to localStorage so they persist across page refreshes
+      setEdits(importedEdits);
+      saveEdits(importedEdits);
       
-      // Update filters with years present in the new dataset
-      const years = Array.from(new Set(normalized.map((row) => row.year).filter(Boolean))).sort();
-      setFilters((prev) => ({ ...prev, years: new Set(years) }));
+      alert(`Successfully imported progress! Loaded ${Object.keys(importedEdits).length} edited papers, bookmarks, and tags. They have been saved locally and will persist.`);
       
-      alert(`Successfully imported ${normalized.length.toLocaleString()} papers! Any CSV edits have been loaded as the starting baseline.`);
+      // Force page reload to cleanly re-initialize the baseline CSV with the imported localStorage edits
+      window.location.reload();
     } catch (err) {
       alert("Failed to parse the imported CSV file. Make sure it has a valid format.");
       console.error(err);
