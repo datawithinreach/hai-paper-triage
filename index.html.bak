@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CHI/UIST Human-AI Paper Triage</title>
+    <link rel="stylesheet" href="app.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Dataset filters">
+        <div class="brand">
+          <div>
+            <h1>Paper Triage</h1>
+            <p>CHI/UIST human-AI interaction review</p>
+          </div>
+        </div>
+
+        <section class="filter-group">
+          <label for="searchInput">Title, author, abstract, tag</label>
+          <input id="searchInput" type="search" placeholder="Search papers" autocomplete="off" />
+        </section>
+
+        <section class="filter-group">
+          <span class="control-label">Conference</span>
+          <div id="conferenceFilters" class="segmented" aria-label="Conference"></div>
+        </section>
+
+        <section class="filter-group">
+          <span class="control-label">Year</span>
+          <div id="yearFilters" class="chip-grid" aria-label="Year"></div>
+        </section>
+
+        <section class="filter-group">
+          <span class="control-label">Relevance</span>
+          <div id="relevanceFilters" class="stacked-options" aria-label="Relevance"></div>
+        </section>
+
+        <section class="filter-group">
+          <label for="tagFilter">Tag</label>
+          <select id="tagFilter">
+            <option value="">All tags</option>
+          </select>
+        </section>
+
+        <section class="filter-group">
+          <label for="sortSelect">Sort</label>
+          <select id="sortSelect">
+            <option value="year-desc">Newest first</option>
+            <option value="year-asc">Oldest first</option>
+            <option value="title-asc">Title A-Z</option>
+            <option value="relevance">Relevant first</option>
+          </select>
+        </section>
+
+        <div class="sidebar-actions">
+          <button id="exportBtn" class="primary-btn" type="button">Export CSV</button>
+          <button id="resetFiltersBtn" class="ghost-btn" type="button">Reset filters</button>
+        </div>
+
+        <div class="save-state">
+          <strong id="savedCount">0</strong>
+          <span>edited papers saved in this browser</span>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <div id="loadState" class="eyebrow">Loading dataset</div>
+            <h2 id="viewTitle">Proceedings Review</h2>
+          </div>
+          <div class="metrics" aria-label="Dataset summary">
+            <div>
+              <strong id="visibleCount">0</strong>
+              <span>shown</span>
+            </div>
+            <div>
+              <strong id="relevantCount">0</strong>
+              <span>marked relevant</span>
+            </div>
+            <div>
+              <strong id="changedCount">0</strong>
+              <span>edited</span>
+            </div>
+          </div>
+        </header>
+
+        <nav class="view-toggle" aria-label="View mode">
+          <button id="listViewBtn" class="view-toggle-btn" type="button" aria-pressed="true">Review list</button>
+          <button id="mapViewBtn" class="view-toggle-btn" type="button" aria-pressed="false">Embedding map</button>
+        </nav>
+
+        <section class="review-strip" aria-label="Review progress">
+          <div class="progress-track"><div id="progressBar" class="progress-bar"></div></div>
+          <span id="progressText">No edits yet</span>
+        </section>
+
+        <section id="listView" class="view-panel">
+          <section id="paperList" class="paper-list" aria-live="polite"></section>
+          <div id="emptyState" class="empty-state" hidden>
+            <h3>No matching papers</h3>
+            <p>Try a broader search or reset the filters.</p>
+          </div>
+        </section>
+
+        <section id="mapView" class="view-panel embedding-view" hidden>
+          <div class="map-toolbar">
+            <div>
+              <h3>Live Semantic Map</h3>
+              <p id="mapStatus">Waiting for the analysis server.</p>
+            </div>
+            <button id="refreshMapBtn" class="ghost-btn" type="button">Refresh map</button>
+          </div>
+          <div class="map-layout">
+            <div class="map-stage">
+              <canvas id="embeddingCanvas" width="1100" height="720" aria-label="Embedding scatter plot"></canvas>
+              <div id="mapTooltip" class="map-tooltip" hidden></div>
+            </div>
+            <aside class="cluster-panel" aria-label="Cluster labels">
+              <h3>Clusters</h3>
+              <div id="clusterList" class="cluster-list"></div>
+            </aside>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <template id="paperTemplate">
+      <article class="paper-card">
+        <button class="paper-summary" type="button" aria-expanded="false">
+          <span class="expand-icon" aria-hidden="true">+</span>
+          <span class="paper-main">
+            <span class="paper-title"></span>
+            <span class="paper-meta"></span>
+          </span>
+          <span class="relevance-pill"></span>
+        </button>
+        <div class="paper-detail" hidden>
+          <div class="detail-grid">
+            <div>
+              <h3>Authors</h3>
+              <p class="authors"></p>
+            </div>
+            <div>
+              <h3>Affiliations</h3>
+              <p class="affiliations"></p>
+            </div>
+            <div>
+              <h3>Session</h3>
+              <p class="sessions"></p>
+            </div>
+            <div>
+              <h3>AI Rationale</h3>
+              <p class="rationale"></p>
+            </div>
+          </div>
+
+          <div class="abstract-block">
+            <h3>Abstract</h3>
+            <p class="abstract"></p>
+          </div>
+
+          <div class="review-controls">
+            <label class="relevance-toggle">
+              <input class="relevance-checkbox" type="checkbox" />
+              <span>Relevant to human-AI interaction interfaces</span>
+            </label>
+            <div class="tag-editor">
+              <label>Tags</label>
+              <div class="tag-row">
+                <input class="tag-input" type="text" placeholder="Add tag, then press Enter" />
+                <button class="add-tag-btn" type="button">Add</button>
+              </div>
+              <div class="tags"></div>
+            </div>
+          </div>
+
+          <div class="detail-actions">
+            <a class="doi-link" target="_blank" rel="noreferrer">Open ACM DOI</a>
+          </div>
+        </div>
+      </article>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>

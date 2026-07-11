@@ -1,0 +1,56 @@
+# CHI/UIST Paper Triage
+
+Local mixed-initiative triage interface for CHI and UIST papers related to human-AI interaction interfaces.
+
+## Views
+
+- **Review list**: filter proceedings, expand paper metadata, override AI relevance, add tags, and export a reviewed CSV.
+- **Embedding map**: uses the same global filters, sends the active paper IDs to the local analysis server, and redraws a live semantic scatter plot.
+
+## Offline Embedding Step
+
+Install dependencies:
+
+```bash
+python3 -m pip install -r requirements.txt
+```
+
+Precompute title + abstract embeddings:
+
+```bash
+python3 scripts/precompute_embeddings.py \
+  --input chi_uist_after_chatgpt.csv \
+  --out-dir data \
+  --model BAAI/bge-m3
+```
+
+This writes:
+
+- `data/paper_embeddings.npz`
+- `data/papers_metadata.json`
+
+## Local App + Analysis Server
+
+Run the FastAPI server from this folder:
+
+```bash
+uvicorn analysis_server:app --host 127.0.0.1 --port 8000
+```
+
+Open:
+
+```text
+http://127.0.0.1:8000/
+```
+
+The map endpoint runs UMAP on the active subset, clusters the fresh 2D layout with HDBSCAN, and labels clusters with c-TF-IDF keywords from titles and abstracts.
+
+## Development Fallback
+
+For UI testing before UMAP/HDBSCAN are installed, the server supports a fallback mode:
+
+```bash
+ANALYSIS_ALLOW_FALLBACK=1 uvicorn analysis_server:app --host 127.0.0.1 --port 8000
+```
+
+Use the normal server mode for real analysis.
