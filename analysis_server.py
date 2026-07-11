@@ -18,7 +18,7 @@ from typing import Any
 import numpy as np
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import mimetypes
@@ -577,4 +577,9 @@ def tokenize(text: str) -> list[str]:
     return [token for token in tokens if token not in STOPWORDS and len(token) <= 28]
 
 
-app.mount("/", StaticFiles(directory=ROOT / "dist", html=True), name="static")
+@app.get("/")
+def read_root():
+    return RedirectResponse(url="/hai-paper-triage/")
+
+
+app.mount("/hai-paper-triage", StaticFiles(directory=ROOT / "dist", html=True), name="static")
