@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { PanelLeft } from "lucide-react";
 import type { Paper, Edit, Filters } from "./types";
-import { parseCsv, normalizeRow, normalizeRelevance } from "./utils/csv";
+import { parseCsv, normalizeRow } from "./utils/csv";
 import { Sidebar } from "./components/Sidebar";
 import { PaperCard } from "./components/PaperCard";
 import { EmbeddingMap } from "./components/EmbeddingMap";
@@ -60,50 +60,6 @@ export default function App() {
         const rawRows = parseCsv(csv);
         const normalized = rawRows.map((row, index) => normalizeRow(row, index));
         
-        // Seed edits from the CSV if present (round-trip compatibility)
-        const initialEdits = { ...loadEdits() };
-        let seededAny = false;
-        rawRows.forEach((row, index) => {
-          const key = normalized[index].__key;
-          const tagsStr = String(row.tags || "").trim();
-          const csvTags = tagsStr ? tagsStr.split(";").map((t) => t.trim()).filter(Boolean) : [];
-          const rawEditedVal = row.relevance_edited ? String(row.relevance_edited).trim() : "";
-          const relevanceVal = rawEditedVal ? normalizeRelevance(rawEditedVal) : normalized[index].__aiRelevance;
-          const isChanged = relevanceVal !== normalized[index].__aiRelevance;
-          const isCsvBookmarked = row.bookmarked ? String(row.bookmarked).trim().toLowerCase() === "yes" : false;
-
-          const existingEdit = initialEdits[key];
-          if (existingEdit) {
-            // Merge CSV tags with existing tags
-            const mergedTags = Array.from(new Set([...existingEdit.tags, ...csvTags]));
-            let changed = false;
-            if (mergedTags.length !== existingEdit.tags.length) {
-              existingEdit.tags = mergedTags;
-              changed = true;
-            }
-            if (isCsvBookmarked && !existingEdit.bookmarked) {
-              existingEdit.bookmarked = true;
-              changed = true;
-            }
-            if (changed) {
-              existingEdit.updated_at = new Date().toISOString();
-              seededAny = true;
-            }
-          } else if (isChanged || csvTags.length > 0 || isCsvBookmarked) {
-            // Seed new edit entry
-            initialEdits[key] = {
-              relevance: relevanceVal,
-              tags: csvTags,
-              bookmarked: isCsvBookmarked,
-              updated_at: row.edited_at ? String(row.edited_at).trim() : new Date().toISOString(),
-            };
-            seededAny = true;
-          }
-        });
-        if (seededAny) {
-          setEdits(initialEdits);
-          saveEdits(initialEdits);
-        }
         
         // Populate years from data initially
         const years = Array.from(new Set(normalized.map((row) => row.year).filter(Boolean))).sort();
@@ -182,7 +138,11 @@ export default function App() {
   };
 
   const getTags = (paper: Paper) => {
-    return edits[paper.__key]?.tags || [];
+    return edits[paper.__key]?.tags || paper.__tags || [];
+  };
+
+  const getEffectiveBookmarked = (paper: Paper) => {
+    return edits[paper.__key]?.bookmarked ?? paper.__bookmarked;
   };
 
   // Apply filters and sorting
@@ -200,7 +160,7 @@ export default function App() {
       const matchTag = !tag || paperTags.includes(tag);
       const matchType = type === "All" || paper.type === type;
       const matchEdited = !showOnlyEdited || !!edits[paper.__key];
-      const matchBookmarked = !showOnlyBookmarked || !!edits[paper.__key]?.bookmarked;
+      const matchBookmarked = !showOnlyBookmarked || getEffectiveBookmarked(paper);
       
       let matchSearch = true;
       if (searchLower) {
@@ -256,7 +216,7 @@ export default function App() {
       const matchYear = years.has(paper.year);
       const matchRelevance = relevance.has(currentRelevance);
       const matchTag = !tag || paperTags.includes(tag);
-      const matchBookmarked = !showOnlyBookmarked || !!edits[paper.__key]?.bookmarked;
+      const matchBookmarked = !showOnlyBookmarked || getEffectiveBookmarked(paper);
       
       return matchConf && matchYear && matchRelevance && matchTag && matchBookmarked;
     });

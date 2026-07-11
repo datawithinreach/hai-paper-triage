@@ -64,8 +64,17 @@ export function normalizeRow(row: Record<string, string>, index: number): Paper 
   });
 
   const key = cleanedRow.content_id || cleanedRow.imported_id || `${cleanedRow.title}-${cleanedRow.year}-${index}`;
-  const rawRelevance = cleanedRow.relevance || cleanedRow.relevance_original || "";
+  
+  // Prefer relevance_edited (user override in CSV) over relevance or relevance_original
+  const rawRelevance = cleanedRow.relevance_edited || cleanedRow.relevance || cleanedRow.relevance_original || "";
   const aiRelevance = normalizeRelevance(rawRelevance);
+
+  // Parse baseline tags
+  const tagsStr = cleanedRow.tags || "";
+  const baselineTags = tagsStr ? tagsStr.split(";").map((t) => t.trim()).filter(Boolean) : [];
+
+  // Parse baseline bookmarked
+  const baselineBookmarked = String(cleanedRow.bookmarked || "").trim().toLowerCase() === "yes";
 
   return {
     id: key,
@@ -97,5 +106,7 @@ export function normalizeRow(row: Record<string, string>, index: number): Paper 
       .join(" ")
       .toLowerCase(),
     __aiRelevance: aiRelevance,
+    __tags: baselineTags,
+    __bookmarked: baselineBookmarked,
   };
 }

@@ -17,6 +17,8 @@ export interface Paper {
   __index: number;
   __search: string;
   __aiRelevance: "Yes" | "No" | "Unsure";
+  __tags: string[];
+  __bookmarked: boolean;
 }
 
 export interface Edit {

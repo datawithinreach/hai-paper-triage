@@ -43,7 +43,8 @@ export const PaperCard: React.FC<PaperCardProps> = ({
   const [tagInput, setTagInput] = useState("");
 
   const relevance = edit?.relevance || paper.__aiRelevance || "Unsure";
-  const tags = edit?.tags || [];
+  const tags = edit?.tags || paper.__tags || [];
+  const isBookmarked = edit?.bookmarked ?? paper.__bookmarked;
 
   const handleRelevanceToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
     const nextRelevance = e.target.checked ? "Yes" : "No";
@@ -119,15 +120,15 @@ export const PaperCard: React.FC<PaperCardProps> = ({
         {/* Bookmark Button */}
         <button
           type="button"
-          onClick={() => onUpdateEdit(paper.__key, { bookmarked: !edit?.bookmarked })}
+          onClick={() => onUpdateEdit(paper.__key, { bookmarked: !isBookmarked })}
           className={`flex-shrink-0 mr-4 sm:mr-5 p-2 rounded-lg border transition-all cursor-pointer ${
-            edit?.bookmarked
+            isBookmarked
               ? "bg-amber-50 text-amber-500 border-amber-200"
               : "bg-white text-slate-400 border-line hover:text-slate-600 hover:bg-slate-50"
           }`}
-          title={edit?.bookmarked ? "Remove bookmark" : "Bookmark paper"}
+          title={isBookmarked ? "Remove bookmark" : "Bookmark paper"}
         >
-          <Bookmark className={`w-4.5 h-4.5 ${edit?.bookmarked ? "fill-amber-500 text-amber-500" : ""}`} />
+          <Bookmark className={`w-4.5 h-4.5 ${isBookmarked ? "fill-amber-500 text-amber-500" : ""}`} />
         </button>
       </div>
 
