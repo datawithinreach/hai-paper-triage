@@ -132,8 +132,8 @@ export default function App() {
       const paper = papers.find((p) => p.__key === key);
       const current = prev[key] || {
         relevance: paper?.__aiRelevance || "Unsure",
-        tags: [],
-        bookmarked: false,
+        tags: paper?.__tags || [],
+        bookmarked: !!paper?.__bookmarked,
         updated_at: new Date().toISOString(),
       };
       
@@ -144,11 +144,14 @@ export default function App() {
       };
       
       const changedRelevance = next.relevance !== paper?.__aiRelevance;
-      const hasTags = next.tags.length > 0;
-      const isBookmarked = !!next.bookmarked;
+      
+      const origTags = paper?.__tags || [];
+      const tagsChanged = next.tags.length !== origTags.length || !next.tags.every((t) => origTags.includes(t));
+      
+      const changedBookmark = next.bookmarked !== !!paper?.__bookmarked;
       
       const nextEdits = { ...prev };
-      if (!changedRelevance && !hasTags && !isBookmarked) {
+      if (!changedRelevance && !tagsChanged && !changedBookmark) {
         delete nextEdits[key];
       } else {
         nextEdits[key] = next;
